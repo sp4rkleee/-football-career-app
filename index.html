@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Career Pro</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .player-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4CAF50;
+            transition: width 0.3s ease;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .action-btn {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+            border: none;
+            border-radius: 12px;
+            padding: 15px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+
+        .action-btn.secondary {
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+        }
+
+        .match-events {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .event {
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .success { border-left: 4px solid #4CAF50; }
+        .fail { border-left: 4px solid #f44336; }
+        .goal { border-left: 4px solid #FFD700; }
+
+        .transfer-offer {
+            background: linear-gradient(45deg, #FFD700, #FFA000);
+            color: #333;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 15px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚽ Football Career Pro</h1>
+            <p>Стань легендой футбола!</p>
+        </div>
+
+        <div class="player-card">
+            <h2 id="playerName">Загрузка...</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div>⭐ Рейтинг</div>
+                    <div class="stat-value" id="rating">65</div>
+                </div>
+                <div class="stat-item">
+                    <div>🎯 Позиция</div>
+                    <div class="stat-value" id="position">Нападающий</div>
+                </div>
+                <div class="stat-item">
+                    <div>🏢 Клуб</div>
+                    <div class="stat-value" id="club">Реал Мадрид</div>
+                </div>
+                <div class="stat-item">
+                    <div>💰 Зарплата</div>
+                    <div class="stat-value" id="salary">10K€</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="player-card">
+            <h3>📊 Состояние</h3>
+            <div>⚡ Энергия</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="energyBar" style="width: 100%"></div>
+            </div>
+            <div>😊 Настрой</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="moraleBar" style="width: 100%"></div>
+            </div>
+        </div>
+
+        <div class="action-grid">
+            <button class="action-btn" onclick="playMatch()">🏟️ Сыграть матч</button>
+            <button class="action-btn secondary" onclick="train()">💪 Тренировка</button>
+            <button class="action-btn secondary" onclick="rest()">😴 Отдых</button>
+            <button class="action-btn" onclick="showStats()">📊 Статистика</button>
+        </div>
+
+        <div id="matchEvents" class="match-events" style="display: none;">
+            <h3>📊 События матча</h3>
+            <div id="eventsList"></div>
+        </div>
+
+        <div id="transferOffer" class="transfer-offer" style="display: none;">
+            <h3>🔄 Трансферное предложение!</h3>
+            <p id="offerText"></p>
+            <button class="action-btn" onclick="acceptTransfer()">✅ Принять</button>
+            <button class="action-btn secondary" onclick="declineTransfer()">❌ Отклонить</button>
+        </div>
+    </div>
+
+    <script>
+        // Игровые данные
+        let player = {
+            name: "Игрок",
+            rating: 65,
+            position: "Нападающий",
+            club: "Реал Мадрид",
+            salary: 10000,
+            energy: 100,
+            morale: 100,
+            goals: 0,
+            assists: 0,
+            matches: 0,
+            experience: 0
+        };
+
+        const clubs = ["Реал Мадрид", "Барселона", "Манчестер Юнайтед", "Манчестер Сити", "Ливерпуль"];
+
+        // Инициализация Telegram Web App
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+
+        // Получаем данные пользователя из Telegram
+        if (tg.initDataUnsafe.user) {
+            const user = tg.initDataUnsafe.user;
+            player.name = user.first_name || 'Игрок';
+        }
+
+        // Инициализация игры
+        function initGame() {
+            updateUI();
+        }
+
+        // Обновление интерфейса
+        function updateUI() {
+            document.getElementById('playerName').textContent = player.name;
+            document.getElementById('rating').textContent = player.rating;
+            document.getElementById('position').textContent = player.position;
+            document.getElementById('club').textContent = player.club;
+            document.getElementById('salary').textContent = (player.salary / 1000).toFixed(0) + 'K€';
+            
+            document.getElementById('energyBar').style.width = player.energy + '%';
+            document.getElementById('moraleBar').style.width = player.morale + '%';
+        }
+
+        // Играть матч
+        function playMatch() {
+            if (player.energy < 30) {
+                showNotification("❌ Слишком устал для игры!");
+                return;
+            }
+
+            player.energy -= 30;
+            player.matches += 1;
+            player.experience += 25;
+
+            const events = [];
+            
+            // Шанс забить гол
+            if (Math.random() * 100 < (30 + (player.rating - 65) / 2)) {
+                player.goals += 1;
+                events.push({ text: "⚽ ВЫ ЗАБИЛИ ГОЛ!", type: "goal" });
+            }
+
+            // Шанс голевой передачи
+            if (Math.random() * 100 < (25 + (player.rating - 65) / 2)) {
+                player.assists += 1;
+                events.push({ text: "🎯 Голевая передача!", type: "success" });
+            }
+
+            // Рандомные события
+            const randomEvent = Math.random();
+            if (randomEvent < 0.4) {
+                events.push({ text: "🛡️ Успешный отбор!", type: "success" });
+            } else if (randomEvent < 0.6) {
+                events.push({ text: "🌀 Великолепный дриблинг!", type: "success" });
+            } else if (randomEvent < 0.7) {
+                events.push({ text: "💥 Промах в отборе", type: "fail" });
+            }
+
+            // Изменение рейтинга и настроения
+            player.rating += Math.floor(Math.random() * 3) - 1;
+            player.morale += Math.floor(Math.random() * 15) - 5;
+            player.morale = Math.max(0, Math.min(100, player.morale));
+            player.rating = Math.max(50, player.rating);
+
+            showMatchEvents(events);
+            
+            // Шанс получить трансферное предложение
+            if (Math.random() < 0.2) {
+                showTransferOffer();
+            }
+
+            updateUI();
+        }
+
+        // Тренировка
+        function train() {
+            if (player.energy >= 20) {
+                player.energy -= 20;
+                player.rating += 1;
+                player.morale -= 3;
+                player.experience += 10;
+                
+                showNotification("💪 Тренировка прошла успешно! Рейтинг +1");
+                updateUI();
+            } else {
+                showNotification("❌ Слишком устал для тренировки");
+            }
+        }
+
+        // Отдых
+        function rest() {
+            const energyGain = 25;
+            const moraleGain = 8;
+            
+            player.energy = Math.min(100, player.energy + energyGain);
+            player.morale = Math.min(100, player.morale + moraleGain);
+            player.experience += 5;
+            
+            showNotification("😴 Хороший отдых! Энергия +25, Настрой +8");
+            updateUI();
+        }
+
+        // Показать события матча
+        function showMatchEvents(events) {
+            const eventsContainer = document.getElementById('matchEvents');
+            const eventsList = document.getElementById('eventsList');
+            
+            eventsList.innerHTML = '';
+            events.forEach(event => {
+                const eventElement = document.createElement('div');
+                eventElement.className = 'event ' + event.type;
+                eventElement.textContent = event.text;
+                eventsList.appendChild(eventElement);
+            });
+            
+            eventsContainer.style.display = 'block';
+        }
+
+        // Показать трансферное предложение
+        function showTransferOffer() {
+            const newClub = clubs[Math.floor(Math.random() * clubs.length)];
+            const salaryIncrease = 25;
+            const newSalary = player.salary * 1.25;
+            
+            document.getElementById('offerText').textContent = 
+                newClub + ' предлагает контракт!\nНовая зарплата: ' + 
+                (newSalary / 1000).toFixed(0) + 'K€/мес (+25%)';
+            
+            document.getElementById('transferOffer').style.display = 'block';
+        }
+
+        // Принять трансфер
+        function acceptTransfer() {
+            const offerText = document.getElementById('offerText').textContent;
+            const newClub = offerText.split(' ')[0];
+            
+            player.club = newClub;
+            player.salary = player.salary * 1.25;
+            
+            document.getElementById('transferOffer').style.display = 'none';
+            showNotification("✅ Вы перешли в " + newClub + "!");
+            updateUI();
+        }
+
+        // Отклонить трансфер
+        function declineTransfer() {
+            document.getElementById('transferOffer').style.display = 'none';
+            showNotification("❌ Вы отклонили предложение");
+        }
+
+        // Показать статистику
+        function showStats() {
+            const stats = 
+                '👤 ' + player.name + '\n' +
+                '⭐ Рейтинг: ' + player.rating + '\n' +
+                '🎯 Позиция: ' + player.position + '\n' +
+                '🏢 Клуб: ' + player.club + '\n' +
+                '💰 Зарплата: ' + (player.salary / 1000).toFixed(0) + 'K€/мес\n\n' +
+                '📊 Статистика:\n' +
+                '⚽ Голы: ' + player.goals + '\n' +
+                '🎯 Передачи: ' + player.assists + '\n' +
+                '🏟️ Матчи: ' + player.matches + '\n' +
+                '📈 Опыт: ' + player.experience;
+            
+            alert(stats);
+        }
+
+        // Показать уведомление
+        function showNotification(message) {
+            alert(message);
+        }
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
